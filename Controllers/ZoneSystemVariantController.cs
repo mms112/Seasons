@@ -1559,7 +1559,7 @@ namespace Seasons
             }
 
             int musicHash = frozenOceanMusic.GetStableHashCode();
-            if (!enableNightMusicOnFrozenOcean.Value || !LocalPlayerIsOnFrozenOcean() || !EnvMan.IsNight())
+            if (!enableNightMusicOnFrozenOcean.Value || !LocalPlayerIsOnFrozenOcean())
             {
                 if (registeredMusic != null)
                 {
@@ -1591,7 +1591,7 @@ namespace Seasons
                     frozenOcean.m_name = frozenOceanMusic;
                     frozenOcean.m_ambientMusic = true;
                     frozenOcean.m_loop = Settings.ContinousMusic;
-                    frozenOcean.m_volume = 0.2f;
+                    frozenOcean.m_volume = 0.25f;
                     frozenOcean.m_fadeInTime = 10f;
 
                     __instance.m_music.Add(frozenOcean);

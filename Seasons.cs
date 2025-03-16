@@ -1142,7 +1142,30 @@ namespace Seasons
             if (UnityEngine.Random.Range(0f, 1f) < Mathf.Clamp01(chanceToProduceACropInWinter.Value))
                 pickable.m_nview.GetZDO().Set(SeasonsVars.s_cropSurvivedWinterDayHash, seasonState.GetCurrentWorldDay());
             else
+            {
+                pickable.m_nview.GetZDO().Set(SeasonsVars.s_pickedByWinterHash, true);
                 pickable.m_nview.InvokeRPC(ZNetView.Everybody, "RPC_SetPicked", true);
+            }
+        }
+
+        public static IEnumerator PlantDestroyInWinter(Plant plant)
+        {
+            ZNetScene scene = ZNetScene.instance;
+            yield return waitFor1Second;
+
+            if (!scene || ZNetScene.instance != scene || !plant || !plant.ShouldBePickedInWinter())
+                yield break;
+
+            if (!plant.m_nview || !plant.m_nview.IsValid() || !plant.m_nview.IsOwner())
+                yield break;
+
+            if (UnityEngine.Random.Range(0f, 1f) < Mathf.Clamp01(chanceToProduceACropInWinter.Value))
+                plant.m_nview.GetZDO().Set(SeasonsVars.s_cropSurvivedWinterDayHash, seasonState.GetCurrentWorldDay());
+            else
+            {
+                plant.m_nview.GetZDO().Set(SeasonsVars.s_pickedByWinterHash, true);
+                plant.Destroy();
+            }
         }
 
         public static IEnumerator ReplantTree(GameObject prefab, Vector3 position, Quaternion rotation, float scale)

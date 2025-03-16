@@ -180,6 +180,24 @@ namespace Seasons
             }
         }
 
+        [HarmonyPatch(typeof(Pickable), nameof(Pickable.Interact))]
+        public static class Pickable_Interact_PreventPicking
+        {
+            private static bool Prefix(Pickable __instance, ref bool __result)
+            {
+                if (__instance.IsIgnored(false))
+                    return true;
+
+                if (__instance.ShouldBePickedInWinter(true))
+                {
+                    __result = false;
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
         [HarmonyPatch(typeof(Pickable), nameof(Pickable.UpdateRespawn))]
         public static class Pickable_UpdateRespawn_PlantsGrowthMultiplier
         {
@@ -229,7 +247,9 @@ namespace Seasons
         {
             private static void Postfix(Pickable __instance, ref string __result)
             {
-                if (hoverPickable.Value != StationHover.Vanilla)
+                bool pickedByWinter = __instance.m_nview?.GetZDO()?.GetBool(SeasonsVars.s_pickedByWinterHash, false) ?? false;
+
+                if ((hoverPickable.Value != StationHover.Vanilla) || pickedByWinter)
                 {
                     if (__instance.m_picked && __instance.m_enabled > 0 && __instance.m_nview != null && __instance.m_nview.IsValid())
                     {
@@ -248,11 +268,13 @@ namespace Seasons
                                 __result += $"\n{FromPercent(timeSpan.TotalSeconds / respawnTimeSeconds)}";
                             else if (hoverPickable.Value == StationHover.MinutesSeconds)
                                 __result += $"\n{FromSeconds(respawnTimeSeconds - timeSpan.TotalSeconds)}";
+                            else if (pickedByWinter && (seasonState.GetCurrentSeason() != Season.Winter))
+                                __result += $" ({Localization.instance.Localize("$piece_plant_healthy")})";
                         }
                     }
                 }
 
-                if (__instance.IsIgnored() || seasonState.GetCurrentSeason() != Season.Winter || !__instance.CanBePicked())
+                if (__instance.IsIgnored(false) || seasonState.GetCurrentSeason() != Season.Winter || (__instance.m_picked && !pickedByWinter))
                     return;
 
                 if (string.IsNullOrWhiteSpace(__result))
@@ -327,6 +349,9 @@ namespace Seasons
                 Season season = seasonState.GetCurrentSeason();
                 double rescaledResult = 0d;
 
+                if (__instance.CheckForPerishInWinter())
+                    return;
+
                 do
                 {
                     rescaledResult += (timeSeconds - seasonStart >= __result ? __result : timeSeconds - seasonStart) * seasonState.GetPlantsGrowthMultiplier(season);
@@ -347,6 +372,9 @@ namespace Seasons
         {
             private static void Postfix(Plant __instance, ref string __result)
             {
+                if (__instance.GetStatus() == Plant.Status.TooCold)
+                    __result += $"\n<color=#ADD8E6>{__instance.GetColdStatus().Localize()}</color>";
+
                 if (hoverPlant.Value == StationHover.Vanilla)
                     return;
 
@@ -826,13 +854,13 @@ namespace Seasons
                 removeFrostResistanceFromArmor = false;
                 int warmPieces = SeasonState.GetWarmClothesCount(__instance);
 
-                if (__instance.GetCurrentBiome() == Heightmap.Biome.Mountain ? gettingWetInMountainsCausesCold.Value : gettingWetInWinterCausesCold.Value && seasonState.GetCurrentSeason() == Season.Winter)
+                if (__instance.GetCurrentBiome() == Heightmap.Biome.Mountain ? gettingWetInMountainsCausesCold.Value : gettingWetInWinterCausesCold.Value && (seasonState.GetCurrentSeason() == Season.Winter || warmPieces < 2))
                 {
                     bool isWetInColdEnv = (EnvMan.IsCold() || EnvMan.IsFreezing()) && __instance.GetSEMan().HaveStatusEffect(s_wetStatusHash);
 
                     bool isProtectedFromCold = wearing2WarmPiecesPreventsWetCold.Value && warmPieces > 1;
 
-                    removeFrostResistanceFromArmor = isWetInColdEnv && (!isProtectedFromCold || __instance.IsSwimming());
+                    removeFrostResistanceFromArmor = isWetInColdEnv && (!isProtectedFromCold || __instance.IsSwimming() || __instance.GetCurrentBiome() == Heightmap.Biome.Mountain);
                 }
 
                 if (mountainInWinterRequires2WarmPieces.Value && __instance.GetCurrentBiome() == Heightmap.Biome.Mountain && seasonState.GetCurrentSeason() == Season.Winter && warmPieces < 2)

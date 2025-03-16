@@ -8,22 +8,38 @@ namespace Seasons
     {
         public static string Localize(this string text) => Localization.instance.Localize(text);
 
-        public static bool ShouldBePickedInWinter(this Pickable pickable)
+        public static bool ShouldBePickedInWinter(this Pickable pickable, bool ignoreHeat = false)
         {
             return pickable.CanBePicked()
                 && !pickable.GetPicked()
                 && pickable.IsVulnerableToWinter()
                 && seasonState.GetCurrentDay() >= cropsDiesAfterSetDayInWinter.Value
                 && !pickable.IsProtectedPosition()
-                && !pickable.ProtectedWithHeat();
+                && (ignoreHeat || !pickable.ProtectedWithHeat());
+        }
+
+        public static bool ShouldBePickedInWinter(this Plant plant)
+        {
+            return plant.IsVulnerableToWinter()
+                && seasonState.GetCurrentDay() >= cropsDiesAfterSetDayInWinter.Value
+                && !plant.IsProtectedPosition()
+                && !plant.ProtectedWithHeat();
         }
 
         public static bool IsVulnerableToWinter(this Pickable pickable)
         {
             return seasonState.GetPlantsGrowthMultiplier() == 0f &&
-                    seasonState.GetCurrentSeason() == Season.Winter
-                    && !pickable.ShouldSurviveWinter()
-                    && !pickable.SurvivedCurrentWinter();
+                seasonState.GetCurrentSeason() == Season.Winter
+                && !pickable.ShouldSurviveWinter()
+                && !pickable.SurvivedCurrentWinter();
+        }
+
+        public static bool IsVulnerableToWinter(this Plant plant)
+        {
+            return seasonState.GetPlantsGrowthMultiplier() == 0f &&
+                seasonState.GetCurrentSeason() == Season.Winter
+                && !plant.ShouldSurviveWinter()
+                && !plant.SurvivedCurrentWinter();
         }
 
         public static bool SurvivedCurrentWinter(this Pickable pickable)
@@ -34,6 +50,14 @@ namespace Seasons
                 && Mathf.Abs(pickable.m_nview.GetZDO().GetInt(SeasonsVars.s_cropSurvivedWinterDayHash, 0) - seasonState.GetCurrentWorldDay()) <= seasonState.GetDaysInSeason();
         }
 
+        public static bool SurvivedCurrentWinter(this Plant plant)
+        {
+            return plant.m_nview
+                && plant.m_nview.IsValid()
+                && seasonState.GetCurrentSeason() == Season.Winter
+                && Mathf.Abs(plant.m_nview.GetZDO().GetInt(SeasonsVars.s_cropSurvivedWinterDayHash, 0) - seasonState.GetCurrentWorldDay()) <= seasonState.GetDaysInSeason();
+        }
+
         public static bool IsFreezingToDeath(this Pickable pickable)
         {
             return pickable.m_nview
@@ -42,11 +66,38 @@ namespace Seasons
                 && pickable.GetSecondsToFreeze() > 0;
         }
 
+        public static bool IsFreezingToDeath(this Plant plant)
+        {
+            return plant.m_nview
+                && plant.m_nview.IsValid()
+                && seasonState.GetCurrentSeason() == Season.Winter
+                && plant.GetSecondsToFreeze() > 0;
+        }
+
         public static double GetSecondsToFreeze(this Pickable pickable)
         {
             if (pickable.m_nview && pickable.m_nview.IsValid() && ZNet.instance)
             {
                 long freezingTime = pickable.m_nview.GetZDO().GetLong(SeasonsVars.s_cropStartedFreezingHash, 0L);
+                if (freezingTime <= 0)
+                    return 0d;
+
+                float secondsToFreeze = secondsToFreezeForCropInWinter.Value;
+                if (secondsToFreeze % 60f == 0)
+                    secondsToFreeze -= 2f;
+
+                TimeSpan timeSpan = new DateTime(freezingTime).AddSeconds(secondsToFreeze) - ZNet.instance.GetTime();
+                return timeSpan.TotalSeconds;
+            }
+
+            return 0d;
+        }
+
+        public static double GetSecondsToFreeze(this Plant plant)
+        {
+            if (plant.m_nview && plant.m_nview.IsValid() && ZNet.instance)
+            {
+                long freezingTime = plant.m_nview.GetZDO().GetLong(SeasonsVars.s_cropStartedFreezingHash, 0L);
                 if (freezingTime <= 0)
                     return 0d;
 
@@ -79,6 +130,24 @@ namespace Seasons
             return true;
         }
 
+        public static bool CheckForPerishInWinter(this Plant plant)
+        {
+            if (!plant.ShouldBePickedInWinter())
+            {
+                plant.SetFreezing(false);
+                return false;
+            }
+
+            if (secondsToFreezeForCropInWinter.Value > 0)
+                plant.SetFreezing(true);
+
+            if (plant.IsFreezingToDeath())
+                return false;
+
+            plant.StartCoroutine(PlantDestroyInWinter(plant));
+            return true;
+        }
+
         public static void SetFreezing(this Pickable pickable, bool freezing)
         {
             if (pickable.m_nview && pickable.m_nview.IsValid() && ZNet.instance && pickable.m_nview.GetZDO() is ZDO zdo)
@@ -90,24 +159,58 @@ namespace Seasons
             }
         }
 
-        public static bool IsIgnored(this Pickable pickable)
+        public static void SetFreezing(this Plant plant, bool freezing)
+        {
+            if (plant.m_nview && plant.m_nview.IsValid() && ZNet.instance && plant.m_nview.GetZDO() is ZDO zdo)
+            {
+                if (freezing && zdo.GetLong(SeasonsVars.s_cropStartedFreezingHash, 0L) == 0L && seasonState.GetCurrentSeason() == Season.Winter && seasonState.GetCurrentDay() >= cropsDiesAfterSetDayInWinter.Value)
+                    zdo.Set(SeasonsVars.s_cropStartedFreezingHash, ZNet.instance.GetTime().Ticks);
+                else if (!freezing)
+                    zdo.Set(SeasonsVars.s_cropStartedFreezingHash, 0L);
+            }
+        }
+
+        public static bool IsIgnored(this Pickable pickable, bool checkOwner = true)
         {
             return pickable.m_nview == null ||
                   !pickable.m_nview.IsValid() ||
-                  pickable.m_nview.HasOwner() && !pickable.m_nview.IsOwner() ||
+                  (checkOwner && pickable.m_nview.HasOwner() && !pickable.m_nview.IsOwner()) ||
                   !pickable.ControlPlantGrowth() ||
                   pickable.IsIgnoredPosition();
         }
 
         public static string GetColdStatus(this Pickable pickable)
         {
-            if (pickable.ShouldSurviveWinter())
+            if (pickable.m_picked)
+                return "$piece_plant_toocold";
+            else if (pickable.ShouldSurviveWinter())
                 return "$seasons_plant_frost_resistant";
             else if (pickable.ProtectedWithHeat())
                 return "$seasons_plant_heat_protected";
             else if (pickable.SurvivedCurrentWinter())
                 return "$seasons_plant_survived_winter";
             else if (pickable.GetSecondsToFreeze() is double seconds && seconds != 0d && secondsToFreezeForCropInWinter.Value > 0)
+            {
+                if (seconds > 0)
+                    return $"$seasons_plant_is_freezing\n{FromPercent(seconds / secondsToFreezeForCropInWinter.Value)}";
+                else
+                    return "$seasons_plant_is_frozen";
+            }
+            else if (seasonState.GetCurrentDay() > cropsDiesAfterSetDayInWinter.Value)
+                return "$seasons_plant_will_perish";
+            else
+                return "$seasons_plant_is_exposed";
+        }
+
+        public static string GetColdStatus(this Plant plant)
+        {
+            if (plant.ShouldSurviveWinter())
+                return "$seasons_plant_frost_resistant";
+            else if (plant.ProtectedWithHeat())
+                return "$seasons_plant_heat_protected";
+            else if (plant.SurvivedCurrentWinter())
+                return "$seasons_plant_survived_winter";
+            else if (plant.GetSecondsToFreeze() is double seconds && seconds != 0d && secondsToFreezeForCropInWinter.Value > 0)
             {
                 if (seconds > 0)
                     return $"$seasons_plant_is_freezing\n{FromPercent(seconds / secondsToFreezeForCropInWinter.Value)}";

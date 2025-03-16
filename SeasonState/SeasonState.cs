@@ -1530,8 +1530,7 @@ namespace Seasons
             bool haveOverheat = player.GetSEMan().HaveStatusEffect(SeasonsVars.s_statusEffectOverheatHash);
             bool useLegacyWarm = !summerHeatEnabled.Value
                 && summerHeatAddsExtraWarmCloth.Value
-                && player == Player.m_localPlayer
-                && seasonState.GetCurrentSeason() == Season.Summer;
+                && player == Player.m_localPlayer;
 
             bool getOverheat = useLegacyWarm
                 && seasonState.GetOverheatIn2WarmClothes()
@@ -1547,6 +1546,8 @@ namespace Seasons
             }
 
             int warmClothCount = GetWarmClothesCount(player);
+            if (GetCurrentSeason() == Season.Summer)
+                warmClothCount += 1;
             if (!haveOverheat && warmClothCount > 1)
                 player.GetSEMan().AddStatusEffect(SeasonsVars.s_statusEffectOverheatHash);
             else if (haveOverheat && warmClothCount <= 1)

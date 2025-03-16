@@ -8,6 +8,9 @@ namespace Seasons
         public const string s_cropStartedFreezingName = "Seasons_Started_Freezing";
         public static int s_cropStartedFreezingHash = s_cropStartedFreezingName.GetStableHashCode();
 
+        public const string s_pickedByWinter = "PickedByWinter";
+        public static int s_pickedByWinterHash = s_pickedByWinter.GetStableHashCode();
+
         public static int s_treeRegrowthHaveGrowSpace = "Seasons_HaveGrowSpace".GetStableHashCode();
 
         public const string s_statusEffectSeasonName = "Season";
