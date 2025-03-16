@@ -76,6 +76,7 @@ namespace Seasons
         public static ConfigEntry<bool> shieldGeneratorProtection;
         public static ConfigEntry<bool> shieldGeneratorOnlyWinter;
         public static ConfigEntry<bool> fireHeatProtectsFromPerish;
+        public static ConfigEntry<float> fireHeatLostPerishTime;
         public static ConfigEntry<bool> gettingWetInWinterCausesCold;
 
         public static ConfigEntry<bool> enableFrozenWater;
@@ -321,6 +322,7 @@ namespace Seasons
             changeSeasonOnlyAfterSleep = config("Season", "Change season only after sleep", defaultValue: false, "Season can be changed regular way only after sleep");
             cropsDiesAfterSetDayInWinter = config("Season", "Crops will die after set day in winter", defaultValue: 3, "Crops and pickables will perish after set day in winter");
             fireHeatProtectsFromPerish = config("Season", "Crops will survive if protected by fire", defaultValue: true, "Crops and pickables will not perish in winter if there are fire source nearby");
+            fireHeatLostPerishTime = config("Season", "Fire Lost Crops Perish Time", defaultValue: 900.0f, "Crops and pickables will perish after set time in seconds if not heated anymore");
             cropsToSurviveInWinter = config("Season", "Crops will survive in winter", defaultValue: "Pickable_Carrot,Pickable_Barley,Pickable_Barley_Wild,Pickable_Flax,Pickable_Flax_Wild,Pickable_Thistle,Pickable_Mushroom_Magecap",
                                                                                                 new ConfigDescription("Crops and pickables from the list will not perish after set day in winter", 
                                                                                                 null, 
@@ -769,7 +771,15 @@ namespace Seasons
         {
             yield return waitForFixedUpdate;
 
+            pickable.m_nview?.GetZDO().Set("PickedByWinter".GetStableHashCode(), true);
             pickable.m_nview?.InvokeRPC(ZNetView.Everybody, "RPC_SetPicked", true);
+        }
+
+        public static IEnumerator CheckFishCoR(Fish fish)
+        {
+            yield return waitForFixedUpdate;
+
+            ZoneSystemVariantController.CheckIfFishAboveSurface(fish);
         }
 
         public static IEnumerator ReplantTree(GameObject prefab, Vector3 position, Quaternion rotation, float scale)

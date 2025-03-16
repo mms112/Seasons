@@ -67,6 +67,9 @@ namespace Seasons
                 seasonSettings.Value.SaveToJSON(filename);
             }
 
+            List<MusicMan.NamedMusic> list = new List<MusicMan.NamedMusic>(MusicMan.instance.m_music);
+            File.WriteAllText(Path.Combine(folder, "Default music.json"), JsonConvert.SerializeObject(list, Formatting.Indented));
+
             SeasonSettings.SaveDefaultEnvironments(folder);
             SeasonSettings.SaveDefaultEvents(folder);
             SeasonSettings.SaveDefaultLightings(folder);
@@ -1164,7 +1167,7 @@ namespace Seasons
             if (component == null)
                 return;
 
-            component.m_type = seasonState.GetTorchAsFiresource() && (!Player.m_localPlayer || TorchHeatInBiome(Player.m_localPlayer.GetCurrentBiome())) ? EffectArea.Type.Heat | EffectArea.Type.Fire : EffectArea.Type.Fire;
+            component.m_type = seasonState.GetTorchAsFiresource() && (Player.m_localPlayer && TorchHeatInBiome(Player.m_localPlayer.GetCurrentBiome())) ? EffectArea.Type.Heat | EffectArea.Type.Fire : EffectArea.Type.Fire;
             component.m_isHeatType = component.m_type.HasFlag(EffectArea.Type.Heat);
 
             ItemDrop item = prefab.GetComponent<ItemDrop>();
@@ -1229,6 +1232,8 @@ namespace Seasons
             else
             {
                 int warmClothCount = player.GetInventory().GetEquippedItems().Count(itemData => itemData.m_shared.m_damageModifiers.Any(IsFrostResistant));
+                if (GetCurrentSeason() == Season.Summer)
+                    warmClothCount += 1;
                 if (!haveOverheat && warmClothCount > 1)
                     player.GetSEMan().AddStatusEffect(statusEffectOverheatHash);
                 else if (haveOverheat && warmClothCount <= 1)

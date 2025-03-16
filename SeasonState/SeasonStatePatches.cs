@@ -147,22 +147,57 @@ namespace Seasons
                         && !PlantWillSurviveWinter(pickable.gameObject);
             }
 
-            public static bool IsIgnored(Pickable pickable)
+            public static bool IsIgnored(Pickable pickable, bool checkOwner = true)
             {
                 return pickable.m_nview == null ||
                       !pickable.m_nview.IsValid() ||
-                      !pickable.m_nview.IsOwner() ||
+                      (checkOwner && !pickable.m_nview.IsOwner()) ||
                       !ControlPlantGrowth(pickable.gameObject) ||
                       IsIgnoredPosition(pickable.transform.position);
             }
 
             private static void Postfix(Pickable __instance)
             {
+                if (__instance.m_respawnTimeMinutes == 0.0f)
+                    __instance.InvokeRepeating("UpdateRespawn", UnityEngine.Random.Range(1f, 5f), 1f);
+
+                if (!__instance.m_nview.HasOwner())
+                    __instance.m_nview.ClaimOwnership();
+
                 if (IsIgnored(__instance))
                     return;
 
-                if (ShouldBePicked(__instance) && !ProtectedWithHeat(__instance.transform.position))
-                    __instance.StartCoroutine(PickableSetPicked(__instance));
+                bool heated = ProtectedWithHeat(__instance.transform.position);
+
+                if (heated)
+                {
+                    __instance.m_nview.GetZDO().Set("HeatedTime".GetStableHashCode(), ZNet.instance.GetTime().Ticks);
+                }
+
+                if (ShouldBePicked(__instance) && !heated)
+                {
+                    DateTime heatedTime = new DateTime(__instance.m_nview.GetZDO().GetLong("HeatedTime".GetStableHashCode(), 0L));
+                    if ((ZNet.instance.GetTime() - heatedTime).TotalSeconds > fireHeatLostPerishTime.Value)
+                        __instance.StartCoroutine(PickableSetPicked(__instance));
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(Pickable), nameof(Pickable.Interact))]
+        public static class Pickable_Interact_PreventPicking
+        {
+            private static bool Prefix(Pickable __instance, ref bool __result)
+            {
+                if (Pickable_Awake_PlantsGrowthMultiplier.IsIgnored(__instance, false))
+                    return true;
+
+                if (Pickable_Awake_PlantsGrowthMultiplier.ShouldBePicked(__instance))
+                {
+                    __result = false;
+                    return false;
+                }
+
+                return true;
             }
         }
 
@@ -172,18 +207,33 @@ namespace Seasons
             private static bool Prefix(Pickable __instance, ref float ___m_respawnTimeMinutes, ref float __state)
             {
                 if (Pickable_Awake_PlantsGrowthMultiplier.IsIgnored(__instance))
-                    return true;
+                    return ___m_respawnTimeMinutes > 0.0f;
 
-                if (Pickable_Awake_PlantsGrowthMultiplier.ShouldBePicked(__instance) && !ProtectedWithHeat(__instance.transform.position))
+                bool heated = ProtectedWithHeat(__instance.transform.position);
+
+                if (heated)
                 {
-                    __instance.SetPicked(true);
-                    return false;
+                    __instance.m_nview.GetZDO().Set("HeatedTime".GetStableHashCode(), ZNet.instance.GetTime().Ticks);
+                }
+
+                if (Pickable_Awake_PlantsGrowthMultiplier.ShouldBePicked(__instance) && !heated)
+                {
+                    DateTime heatedTime = new DateTime(__instance.m_nview.GetZDO().GetLong("HeatedTime".GetStableHashCode(), 0L));
+                    if ((ZNet.instance.GetTime() - heatedTime).TotalSeconds > fireHeatLostPerishTime.Value)
+                    {
+                        __instance.m_nview.GetZDO().Set("PickedByWinter".GetStableHashCode(), true);
+                        __instance.m_nview.InvokeRPC(ZNetView.Everybody, "RPC_SetPicked", true);
+                        return false;
+                    }
                 }
 
                 if (IsProtectedPosition(__instance.transform.position))
-                    return true;
+                    return ___m_respawnTimeMinutes > 0.0f;
 
                 if (seasonState.GetPlantsGrowthMultiplier() == 0f)
+                    return false;
+
+                if (___m_respawnTimeMinutes == 0.0f)
                     return false;
 
                 __state = ___m_respawnTimeMinutes;
@@ -217,7 +267,9 @@ namespace Seasons
 
             private static void Postfix(Pickable __instance, ref string __result)
             {
-                if (hoverPickable.Value != StationHover.Vanilla)
+                bool pickedByWinter = __instance.m_nview?.GetZDO()?.GetBool("PickedByWinter".GetStableHashCode(), false) ?? false;
+
+                if ((hoverPickable.Value != StationHover.Vanilla) || pickedByWinter)
                 {
                     if (__instance.m_picked && __instance.m_enabled > 0 && __instance.m_nview != null && __instance.m_nview.IsValid())
                     {
@@ -236,11 +288,13 @@ namespace Seasons
                                 __result += $"\n{FromPercent(timeSpan.TotalSeconds / respawnTimeSeconds)}";
                             else if (hoverPickable.Value == StationHover.MinutesSeconds)
                                 __result += $"\n{FromSeconds(respawnTimeSeconds - timeSpan.TotalSeconds)}";
+                            else if (pickedByWinter && (seasonState.GetCurrentSeason() != Season.Winter))
+                                __result += $" ({Localization.instance.Localize("$piece_plant_healthy")})";
                         }
                     }
                 }
 
-                if (Pickable_Awake_PlantsGrowthMultiplier.IsIgnored(__instance) || seasonState.GetCurrentSeason() != Season.Winter)
+                if (Pickable_Awake_PlantsGrowthMultiplier.IsIgnored(__instance, false) || seasonState.GetCurrentSeason() != Season.Winter || (__instance.m_picked && !pickedByWinter))
                     return;
 
                 if (string.IsNullOrWhiteSpace(__result))
@@ -288,8 +342,15 @@ namespace Seasons
                 if (IsProtectedPosition(__instance.transform.position))
                     return;
 
+                bool heated = ProtectedWithHeat(__instance.transform.position);
+
+                if ((__instance.m_nview?.IsOwner() ?? false) && heated)
+                {
+                    __instance.m_nview.GetZDO().Set("HeatedTime".GetStableHashCode(), ZNet.instance.GetTime().Ticks);
+                }
+
                 if (___m_status == Plant.Status.Healthy && seasonState.GetPlantsGrowthMultiplier() == 0f && seasonState.GetCurrentSeason() == Season.Winter
-                                                        && !PlantWillSurviveWinter(__instance.gameObject) && !ProtectedWithHeat(__instance.transform.position))
+                                                        && !PlantWillSurviveWinter(__instance.gameObject) && !heated)
                     ___m_status = Plant.Status.TooCold;
             }
         }
@@ -306,6 +367,19 @@ namespace Seasons
                 double seasonStart = seasonState.GetStartOfCurrentSeason();
                 Season season = seasonState.GetCurrentSeason();
                 double rescaledResult = 0d;
+
+                if ((__instance.m_status == Plant.Status.TooCold) && (__instance.m_destroyIfCantGrow))
+                {
+                    if ((seasonState.GetCurrentSeason() == Season.Winter) && (seasonState.GetCurrentDay() >= cropsDiesAfterSetDayInWinter.Value))
+                    {
+                        DateTime heatedTime = new DateTime(__instance.m_nview.GetZDO().GetLong("HeatedTime".GetStableHashCode(), 0L));
+                        if ((ZNet.instance.GetTime() - heatedTime).TotalSeconds > fireHeatLostPerishTime.Value)
+                        {
+                            __instance.Destroy();
+                            return;
+                        }
+                    }
+                }
 
                 do
                 {
@@ -782,7 +856,16 @@ namespace Seasons
 
             private static void Prefix(Player __instance)
             {
-                isCalled = gettingWetInWinterCausesCold.Value && seasonState.GetCurrentSeason() == Season.Winter && EnvMan.IsCold() && __instance.GetSEMan().HaveStatusEffect(SEMan.s_statusEffectWet);
+                int numWarmClothes = __instance.GetInventory().GetEquippedItems().Count(itemData => itemData.m_shared.m_damageModifiers.Any(SeasonState.IsFrostResistant));
+                bool wetCausingCold = (seasonState.GetCurrentSeason() == Season.Winter) || (numWarmClothes < 2);
+                isCalled = gettingWetInWinterCausesCold.Value && wetCausingCold && EnvMan.IsCold() && __instance.GetSEMan().HaveStatusEffect(SEMan.s_statusEffectWet);
+
+                if ((seasonState.GetCurrentSeason() == Season.Winter) && (Player.m_localPlayer.GetCurrentBiome() == Heightmap.Biome.Mountain) && (numWarmClothes < 2))
+                {
+                    isCalled = true;
+                }
+
+                seasonState.UpdateTorchesFireWarmth();
             }
 
             private static void Postfix()

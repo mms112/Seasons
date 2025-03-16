@@ -348,7 +348,7 @@ namespace Seasons
                 if (player == null)
                     return;
 
-                __result = __result || player.IsSwimming() && seasonState.GetCurrentSeason() == Season.Winter && EnvMan.IsCold();
+                __result = __result || (player.IsSwimming() || player.GetSEMan().HaveStatusEffect(SEMan.s_statusEffectWet) && EnvMan.IsNight()) && seasonState.GetCurrentSeason() == Season.Winter && EnvMan.IsCold();
             }
         }
 

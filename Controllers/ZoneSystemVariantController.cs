@@ -1307,7 +1307,7 @@ namespace Seasons
             if (__result != null && __result.m_name == "home")
                 return;
 
-            if (!LocalPlayerIsOnFrozenOcean() || !EnvMan.IsNight())
+            if (!LocalPlayerIsOnFrozenOcean())
                 return;
 
             MusicMan.NamedMusic frozenOcean = __instance.FindMusic(frozenOceanMusic);
@@ -1320,7 +1320,7 @@ namespace Seasons
                     frozenOcean.m_name = frozenOceanMusic;
                     frozenOcean.m_ambientMusic = true;
                     frozenOcean.m_loop = Settings.ContinousMusic;
-                    frozenOcean.m_volume = 0.1f;
+                    frozenOcean.m_volume = 0.25f;
                     frozenOcean.m_fadeInTime = 10f;
                     __instance.m_music.Add(frozenOcean);
                 }
@@ -1438,21 +1438,29 @@ namespace Seasons
     [HarmonyPatch(typeof(Fish), nameof(Fish.ConsiderJump))]
     public static class Fish_ConsiderJump_FrozenOceanFishNoJumps
     {
-        private static void Prefix(ref float ___m_jumpChance, ref float __state)
+        private struct Fish_Jump_Chance
+        {
+            public float jumpChance;
+            public float jumpChanceLand;
+        }
+        private static void Prefix(ref float ___m_jumpChance, ref float ___m_jumpOnLandChance, ref Fish_Jump_Chance __state)
         {
             if (!IsWaterSurfaceFrozen())
                 return;
 
-            __state = ___m_jumpChance;
+            __state.jumpChance = ___m_jumpChance;
+            __state.jumpChanceLand = ___m_jumpOnLandChance;
             ___m_jumpChance = 0f;
+            ___m_jumpOnLandChance = 0f;
         }
 
-        private static void Postfix(ref float ___m_jumpChance, float __state)
+        private static void Postfix(ref float ___m_jumpChance, ref float ___m_jumpOnLandChance, Fish_Jump_Chance __state)
         {
             if (!IsWaterSurfaceFrozen())
                 return;
 
-            ___m_jumpChance = __state;
+            ___m_jumpChance = __state.jumpChance;
+            ___m_jumpOnLandChance = __state.jumpChanceLand;
         }
     }
 
@@ -1485,7 +1493,40 @@ namespace Seasons
             if (!IsWaterSurfaceFrozen())
                 return;
 
-            CheckIfFishAboveSurface(__instance);
+            __instance.StartCoroutine(CheckFishCoR(__instance));
+        }
+    }
+
+    [HarmonyPatch(typeof(Fish), nameof(Fish.SetVisible))]
+    public static class Fish_SetVisible_FrozenOceanCharacter
+    {
+        private static void Prefix(Fish __instance, ref bool __state)
+        {
+            __state = __instance.m_lodVisible;
+        }
+        private static void Postfix(Fish __instance, bool __state, bool visible)
+        {
+            if (!IsWaterSurfaceFrozen())
+                return;
+
+            if (visible && !__state)
+                __instance.StartCoroutine(CheckFishCoR(__instance));
+        }
+    }
+
+    [HarmonyPatch(typeof(Fish), nameof(Fish.Interact))]
+    public static class Fish_Interact_FrozenOceanCharacter
+    {
+        private static bool Prefix(Fish __instance, ref bool __result)
+        {
+            if (Player.m_localPlayer.IsOnIce())
+            {
+                __instance.StartCoroutine(CheckFishCoR(__instance));
+                __result = false;
+                return false;
+            }
+
+            return true;
         }
     }
 
