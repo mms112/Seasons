@@ -1,196 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(SolutionDir)\valheim.targets" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{076E7E5F-9182-41E5-A76B-5C051D6B3957}</ProjectGuid>
-    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Seasons</RootNamespace>
-    <AssemblyName>Seasons</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
-    <TargetFrameworkProfile />
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup>
     <LangVersion>10.0</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <NoWarn>1701;1702;CS1685</NoWarn>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="Compatibility\HoneyPlusCompat.cs" />
-    <Compile Include="Compatibility\MyLittleUICompat.cs" />
-    <Compile Include="Compatibility\EWDCompat.cs" />
-    <Compile Include="Compatibility\MarketplaceCompat.cs" />
-    <Compile Include="Compatibility\MarketplaceMapOverlay.cs" />
-    <Compile Include="Controllers\TextureCachingController.cs" />
-    <Compile Include="LoadingTips.cs" />
-    <Compile Include="SeasonState\ControlledComponentsExtentions.cs" />
-    <Compile Include="SeasonState\TerrainDecultivation.cs" />
-    <Compile Include="SeasonTextures\CachedData.cs" />
-    <Compile Include="Compatibility\EpicLootCompat.cs" />
-    <Compile Include="SeasonTextures\PrefabController.cs" />
-    <Compile Include="SeasonTextures\SeasonalTextureVariants.cs" />
-    <Compile Include="SeasonTextures\TextureVariants.cs" />
-    <Compile Include="SeasonTextures\TextureProperties.cs" />
-    <Compile Include="SummerHeat\SE_SummerHeat.cs" />
-    <Compile Include="SummerHeat\SummerHeatController.cs" />
-    <Compile Include="SummerHeat\SummerHeatState.cs" />
-    <Compile Include="SummerHeat\SummerHeatVisuals.cs" />
-    <Compile Include="WinterSnow\SeasonalSnowSettings.cs" />
-    <Compile Include="WinterSnow\SeasonalSnowMaterialRules.cs" />
-    <Compile Include="WinterSnow\SeasonalSnow.cs" />
-    <Compile Include="WinterSnow\SeasonalSnowMeshSettings.cs" />
-    <Compile Include="WinterSnow\SeasonalVagonSnow.cs" />
-    <Compile Include="WinterSnow\SeasonalEnemySnow.cs" />
-    <Compile Include="WinterSnow\SeasonalPlayerCapeSnow.cs" />
-    <Compile Include="Utils\CustomConfigs.cs" />
-    <Compile Include="CustomMusic.cs" />
-    <Compile Include="Utils\CustomPrefabs.cs" />
-    <Compile Include="CustomTextures.cs" />
-    <Compile Include="Utils\CustomSyncedValuesSynchronizer.cs" />
-    <Compile Include="Utils\GlobalSuppressions.cs" />
-    <Compile Include="Utils\IceFloeClimb.cs" />
-    <Compile Include="Controllers\MinimapVariantController.cs" />
-    <Compile Include="SeasonSettings\SeasonBiomeEnvironments.cs" />
-    <Compile Include="SeasonSettings\SeasonBiomeSettings.cs" />
-    <Compile Include="SeasonSettings\SeasonClutterSettings.cs" />
-    <Compile Include="SeasonSettings\SeasonEnvironment.cs" />
-    <Compile Include="SeasonSettings\SeasonGrassSettings.cs" />
-    <Compile Include="SeasonSettings\SeasonLightings.cs" />
-    <Compile Include="SeasonSettings\SeasonRandomEvents.cs" />
-    <Compile Include="SeasonTextures\SeasonalTexturePrefabCache.cs" />
-    <Compile Include="Controllers\ClutterVariantController.cs" />
-    <Compile Include="Utils\HSLColor.cs" />
-    <Compile Include="Seasons.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SeasonSettings\SeasonSettings.cs" />
-    <Compile Include="SeasonSettings\SeasonSnow.cs" />
-    <Compile Include="SeasonSettings\SeasonSettingsFile.cs" />
-    <Compile Include="SeasonState\SeasonStatePatches.cs" />
-    <Compile Include="SeasonState\EnvManPatches.cs" />
-    <Compile Include="SeasonState\SeasonState.cs" />
-    <Compile Include="SeasonSettings\SeasonStats.cs" />
-    <Compile Include="SeasonSettings\SeasonTraderItems.cs" />
-    <Compile Include="SeasonSettings\SeasonWorldSettings.cs" />
-    <Compile Include="SE_Season.cs" />
-    <Compile Include="Controllers\FrozenOceanSliding.cs" />
-    <Compile Include="Controllers\PrefabVariantController.cs" />
-    <Compile Include="Controllers\ZoneSystemVariantController.cs" />
-    <Compile Include="Utils\ItemNameTokens.cs" />
-    <Compile Include="Utils\LocalizationManager.cs" />
-    <Compile Include="Utils\StatusEffectHud.cs" />
-    <Compile Include="Utils\SummerHeatUtils.cs" />
-    <Compile Include="SeasonsVars.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>F:\Steam\steamapps\common\Valheim\BepInEx\core\0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="assembly_guiutils_publicized, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\publicized_assemblies\assembly_guiutils_publicized.dll</HintPath>
-    </Reference>
-    <Reference Include="assembly_utils_publicized, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\publicized_assemblies\assembly_utils_publicized.dll</HintPath>
-    </Reference>
-    <Reference Include="assembly_valheim_publicized, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\publicized_assemblies\assembly_valheim_publicized.dll</HintPath>
-    </Reference>
-    <Reference Include="BepInEx">
-      <HintPath>F:\Steam\steamapps\common\Valheim\BepInEx\core\BepInEx.dll</HintPath>
-    </Reference>
-    <Reference Include="ConditionalConfigSync">
-      <HintPath>..\Assemblies\Managers\ConditionalConfigSync.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\netstandard.dll</HintPath>
-    </Reference>
-    <Reference Include="SoftReferenceableAssets, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\SoftReferenceableAssets.dll</HintPath>
-    </Reference>
-    <Reference Include="Splatform, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\Splatform.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="Unity.TextMeshPro, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\Unity.TextMeshPro.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine">
-      <HintPath>..\Assemblies\stable\UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\UnityEngine.AudioModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\Assemblies\stable\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\UnityEngine.ImageConversionModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.IMGUIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\UnityEngine.IMGUIModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.JSONSerializeModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\UnityEngine.JSONSerializeModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ParticleSystemModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\UnityEngine.ParticleSystemModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\UnityEngine.PhysicsModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>..\Assemblies\stable\UnityEngine.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\UnityEngine.UIModule.dll</HintPath>
-    </Reference>
-    <Reference Include="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\mscorlib.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestAudioModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\stable\UnityEngine.UnityWebRequestModule.dll</HintPath>
-    </Reference>
-  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Assets\season_fall.png" />
     <EmbeddedResource Include="Assets\season_spring.png" />
@@ -233,73 +48,77 @@
     <EmbeddedResource Include="Assets\Textures\oak_leaf\Winter_3.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include=".editorconfig" />
-    <None Include="EmbeddedLocalizations.csv" />
-    <None Include="ILRepack.targets" />
-    <None Include="UpdateThunderstoreManifest.ps1" />
+    <None Remove="EmbeddedLocalizations.csv" />
+    <None Remove="LICENSE*" />
+    <None Remove="UpdateThunderstoreManifest.ps1" />
     <EmbeddedResource Include="Translations\Chinese.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Translations\Chinese_Trad.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Translations\Czech.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Translations\Dutch.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Translations\English.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Translations\French.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Translations\German.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Translations\Japanese.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Translations\Korean.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Translations\Polish.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Translations\Portuguese_Brazilian.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Translations\Russian.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Translations\Spanish.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Translations\Turkish.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Translations\Ukrainian.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
-    <None Include="UpdateTranslations.ps1" />
+    <None Remove="UpdateTranslations.ps1" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ILRepack.Lib.MSBuild.Task">
-      <Version>2.0.46</Version>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
+      <Version>2.0.18.2</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.3</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="ConditionalConfigSync">
+      <HintPath>$(SolutionDir)\Plugins\ConditionalConfigSync\ConditionalConfigSync.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="Assets\valheim_warm.png" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="$(SolutionDir)\Config\$(AssemblyName)\shudnal.$(AssemblyName)\*.*" Link="Config\%(FileName)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Include="@(Content)" />
+  </ItemGroup>
 </Project>

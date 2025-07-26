@@ -99,6 +99,20 @@ namespace Seasons
 
         public int GetCurrentWorldDay() => GetWorldDay(GetTotalSeconds());
 
+        public static int Clamp(int value, int min, int max)
+        {
+            if (value < min)
+            {
+                return min;
+            }
+            else if (value > max)
+            {
+                return max;
+            }
+
+            return value;
+        }
+
         public void UpdateState(bool timeForSeasonToChange = false, bool forceSeasonChange = false)
         {
             if (!IsActive || !ZNet.instance.IsServer())
@@ -143,7 +157,7 @@ namespace Seasons
             }
 
             if (overrideSeasonDay.Value)
-                m_dayInSeasonGlobal = Math.Clamp(seasonDayOverrided.Value, 1, GetDaysInSeason(setSeason));
+                m_dayInSeasonGlobal = Clamp(seasonDayOverrided.Value, 1, GetDaysInSeason(setSeason));
 
             if (!CheckIfSeasonChanged(currentSeason, setSeason, m_dayInSeasonGlobal, worldDay))
                 CheckIfDayChanged(m_dayInSeasonGlobal, worldDay, forceSeasonChange);
