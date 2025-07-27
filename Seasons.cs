@@ -143,9 +143,9 @@ namespace Seasons
         public static Sprite iconFall;
         public static Sprite iconWinter;
 
-        public static Texture2D Minimap_Summer_ForestTex = new Texture2D(512, 512, TextureFormat.RGBA32, false);
-        public static Texture2D Minimap_Fall_ForestTex = new Texture2D(512, 512, TextureFormat.RGBA32, false);
-        public static Texture2D Minimap_Winter_ForestTex = new Texture2D(512, 512, TextureFormat.RGBA32, false);
+        public static Texture2D Minimap_Summer_ForestTex;
+        public static Texture2D Minimap_Fall_ForestTex;
+        public static Texture2D Minimap_Winter_ForestTex;
 
         public static string configDirectory;
         public static string cacheDirectory;
@@ -225,6 +225,10 @@ namespace Seasons
         private void Awake()
         {
             instance = this;
+
+            Minimap_Summer_ForestTex = new Texture2D(512, 512, TextureFormat.RGBA32, false);
+            Minimap_Fall_ForestTex = new Texture2D(512, 512, TextureFormat.RGBA32, false);
+            Minimap_Winter_ForestTex = new Texture2D(512, 512, TextureFormat.RGBA32, false);
 
             ConfigInit();
             _ = configSync.AddLockingConfigEntry(configLocked);
