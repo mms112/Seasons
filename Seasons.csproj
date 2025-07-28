@@ -74,6 +74,12 @@
     <Content Include="$(SolutionDir)\Config\$(AssemblyName)\shudnal.$(AssemblyName)\Spring.json" Link="Config\Spring.json" />
     <Content Include="$(SolutionDir)\Config\$(AssemblyName)\shudnal.$(AssemblyName)\Summer.json" Link="Config\Summer.json" />
     <Content Include="$(SolutionDir)\Config\$(AssemblyName)\shudnal.$(AssemblyName)\Winter.json" Link="Config\Winter.json" />
+    <Content Include="Translations\English\Seasons.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Translations\German\Seasons.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

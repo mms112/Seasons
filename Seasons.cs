@@ -105,21 +105,6 @@ namespace Seasons
         public static ConfigEntry<StationHover> hoverPickable;
         public static ConfigEntry<bool> seasonalMinimapBorderColor;
 
-        public static ConfigEntry<string> localizationSeasonNameSpring;
-        public static ConfigEntry<string> localizationSeasonNameSummer;
-        public static ConfigEntry<string> localizationSeasonNameFall;
-        public static ConfigEntry<string> localizationSeasonNameWinter;
-
-        public static ConfigEntry<string> localizationSeasonIsComingSpring;
-        public static ConfigEntry<string> localizationSeasonIsComingSummer;
-        public static ConfigEntry<string> localizationSeasonIsComingFall;
-        public static ConfigEntry<string> localizationSeasonIsComingWinter;
-
-        public static ConfigEntry<string> localizationSeasonTooltipSpring;
-        public static ConfigEntry<string> localizationSeasonTooltipSummer;
-        public static ConfigEntry<string> localizationSeasonTooltipFall;
-        public static ConfigEntry<string> localizationSeasonTooltipWinter;
-
         public static ConfigEntry<bool> enableSeasonalGlobalKeys;
         public static ConfigEntry<string> seasonalGlobalKeyFall;
         public static ConfigEntry<string> seasonalGlobalKeySpring;
@@ -273,7 +258,7 @@ namespace Seasons
 
         private void OnDestroy()
         {
-            Config.Save();
+            //Config.Save(); Do not save the config, to keep the synced values
             instance = null;
             harmony?.UnpatchSelf();
         }
@@ -441,22 +426,6 @@ namespace Seasons
             seasonalGlobalKeyWinter.SettingChanged += (sender, args) => seasonState.UpdateGlobalKeys();
             seasonalGlobalKeyDay.SettingChanged += (sender, args) => seasonState.UpdateGlobalKeys();
 
-
-            localizationSeasonNameSpring = config("Seasons - Localization", "Season name Spring", defaultValue: "Spring", "Season name");
-            localizationSeasonNameSummer = config("Seasons - Localization", "Season name Summer", defaultValue: "Summer", "Season name");
-            localizationSeasonNameFall = config("Seasons - Localization", "Season name Fall", defaultValue: "Fall", "Season name");
-            localizationSeasonNameWinter = config("Seasons - Localization", "Season name Winter", defaultValue: "Winter", "Season name");
-
-            localizationSeasonIsComingSpring = config("Seasons - Localization", "Status tooltip - Spring is coming", defaultValue: "Spring is coming", "Message to be shown on the last day of the previous season.");
-            localizationSeasonIsComingSummer = config("Seasons - Localization", "Status tooltip - Summer is coming", defaultValue: "Summer is coming", "Message to be shown on the last day of the previous season.");
-            localizationSeasonIsComingFall = config("Seasons - Localization", "Status tooltip - Fall is coming", defaultValue: "Fall is coming", "Message to be shown on the last day of the previous season.");
-            localizationSeasonIsComingWinter = config("Seasons - Localization", "Status tooltip - Winter is coming", defaultValue: "Winter is coming", "Message to be shown on the last day of the previous season.");
-
-            localizationSeasonTooltipSpring = config("Seasons - Localization", "Season status effect tooltip - Spring has come", defaultValue: "Spring has come", "Message to be shown on the buff tooltip and Raven menu.");
-            localizationSeasonTooltipSummer = config("Seasons - Localization", "Season status effect tooltip - Summer has come", defaultValue: "Summer has come", "Message to be shown on the buff tooltip and Raven menu.");
-            localizationSeasonTooltipFall = config("Seasons - Localization", "Season status effect tooltip - Fall has come", defaultValue: "Fall has come", "Message to be shown on the buff tooltip and Raven menu.");
-            localizationSeasonTooltipWinter = config("Seasons - Localization", "Season status effect tooltip - Winter has come", defaultValue: "Winter has come", "Message to be shown on the buff tooltip and Raven menu.");
-
             cacheStorageFormat = config("Test", "Cache format", defaultValue: CacheFormat.Binary, "Cache files format. Binary for fast loading single non humanreadable file. JSON for humanreadable cache.json + textures subdirectory.");
             logTime = config("Test", "Log time", defaultValue: false, "Log time info on state update");
             logFloes = config("Test", "Log ice floes", defaultValue: false, "Log ice floes spawning/destroying");
@@ -566,17 +535,17 @@ namespace Seasons
 
         public static string GetSeasonTooltip(Season season)
         {
-            return instance.GetStringConfig($"localizationSeasonTooltip{season}");
+            return Localization.instance.Localize($"$season_{season.ToString().ToLower()}_begin");
         }
 
         public static string GetSeasonName(Season season)
         {
-            return instance.GetStringConfig($"localizationSeasonName{season}");
+            return Localization.instance.Localize($"$season_{season.ToString().ToLower()}_desc");
         }
 
         public static string GetSeasonIsComing(Season season)
         {
-            return instance.GetStringConfig($"localizationSeasonIsComing{season}");
+            return Localization.instance.Localize($"$season_{season.ToString().ToLower()}_arriving");
         }
 
         public static Sprite GetSeasonIcon(Season season)
