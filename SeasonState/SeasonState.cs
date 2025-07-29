@@ -1167,7 +1167,7 @@ namespace Seasons
             if (component == null)
                 return;
 
-            component.m_type = seasonState.GetTorchAsFiresource() && (Player.m_localPlayer && TorchHeatInBiome(Player.m_localPlayer.GetCurrentBiome())) ? EffectArea.Type.Heat | EffectArea.Type.Fire : EffectArea.Type.Fire;
+            component.m_type = seasonState.GetTorchAsFiresource() && Player.m_localPlayer && TorchHeatInBiome(Player.m_localPlayer.GetCurrentBiome()) && !Player.m_localPlayer.InInterior() ? EffectArea.Type.Heat | EffectArea.Type.Fire : EffectArea.Type.Fire;
             component.m_isHeatType = component.m_type.HasFlag(EffectArea.Type.Heat);
 
             ItemDrop item = prefab.GetComponent<ItemDrop>();
