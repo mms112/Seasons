@@ -274,11 +274,14 @@ namespace Seasons
                     }
                 }
 
-                if (__instance.IsIgnored(false) || seasonState.GetCurrentSeason() != Season.Winter || (__instance.m_picked && !pickedByWinter))
-                    return;
-
                 if (string.IsNullOrWhiteSpace(__result))
                     __result = __instance.GetHoverName().Localize();
+                    
+                if (!__instance.m_picked && pickedByWinter)
+                    __result += $" ({Localization.instance.Localize("$pickable_fertilized")})";
+
+                if (__instance.IsIgnored(false) || seasonState.GetCurrentSeason() != Season.Winter || (__instance.m_picked && !pickedByWinter))
+                    return;
 
                 __result += $"\n<color=#ADD8E6>{__instance.GetColdStatus().Localize()}</color>";
             }
