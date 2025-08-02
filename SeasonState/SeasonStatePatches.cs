@@ -294,11 +294,11 @@ namespace Seasons
                     }
                 }
 
-                if (Pickable_Awake_PlantsGrowthMultiplier.IsIgnored(__instance, false) || seasonState.GetCurrentSeason() != Season.Winter || (__instance.m_picked && !pickedByWinter))
-                    return;
-
                 if (string.IsNullOrWhiteSpace(__result))
                     __result = Localization.instance.Localize(__instance.GetHoverName());
+
+                if (Pickable_Awake_PlantsGrowthMultiplier.IsIgnored(__instance, false) || seasonState.GetCurrentSeason() != Season.Winter || (__instance.m_picked && !pickedByWinter))
+                    return;
 
                 __result += Localization.instance.Localize($"\n<color=#ADD8E6>{GetPickableStatus(__instance)}</color>");
             }
