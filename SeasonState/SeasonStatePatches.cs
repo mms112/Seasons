@@ -161,7 +161,7 @@ namespace Seasons
                 if (__instance.m_respawnTimeMinutes == 0.0f)
                     __instance.InvokeRepeating("UpdateRespawn", UnityEngine.Random.Range(1f, 5f), 1f);
 
-                if (!__instance.m_nview.HasOwner())
+                if (!__instance.m_nview.HasOwner() && __instance.m_nview.IsValid())
                     __instance.m_nview.ClaimOwnership();
 
                 if (IsIgnored(__instance))
@@ -296,6 +296,9 @@ namespace Seasons
 
                 if (string.IsNullOrWhiteSpace(__result))
                     __result = Localization.instance.Localize(__instance.GetHoverName());
+
+                if (!__instance.m_picked && pickedByWinter)
+                    __result += $" ({Localization.instance.Localize("$pickable_fertilized")})";
 
                 if (Pickable_Awake_PlantsGrowthMultiplier.IsIgnored(__instance, false) || seasonState.GetCurrentSeason() != Season.Winter || (__instance.m_picked && !pickedByWinter))
                     return;
