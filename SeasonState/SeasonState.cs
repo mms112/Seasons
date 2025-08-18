@@ -87,6 +87,8 @@ namespace Seasons
 
         public static bool IsActive => seasonState != null && EnvMan.instance != null;
 
+        public static long GetDayLengthInSecondsEnvMan() => EnvMan.instance == null ? (dayLengthSec.Value != 0L ? dayLengthSec.Value : 1800L) : EnvMan.instance.m_dayLengthSec;
+
         public int GetWorldDay(double seconds) => (int)(seconds / GetDayLengthInSeconds());
 
         public int GetCurrentWorldDay() => GetWorldDay(GetTotalSeconds());
@@ -193,7 +195,7 @@ namespace Seasons
 
         public long GetDayLengthInSeconds()
         {
-            return Math.Max(5, m_isUsingIngameDays ? (EnvMan.instance == null ? 1800L : EnvMan.instance.m_dayLengthSec) : seasonWorldSettings.GetDayLengthSeconds(GetCurrentWorld()));
+            return Math.Max(5, m_isUsingIngameDays ? GetDayLengthInSecondsEnvMan() : seasonWorldSettings.GetDayLengthSeconds(GetCurrentWorld()));
         }
 
         public Season GetCurrentSeason()
@@ -271,16 +273,42 @@ namespace Seasons
             return GetSeasonSettings(season).m_nightLength;
         }
 
+        public static void RefreshBiomesDefault(bool forceUpdate)
+        {
+            if (forceUpdate)
+                biomesDefault.Clear();
+
+            if (!EnvMan.instance)
+                return;
+
+            foreach (BiomeEnvSetup biome in EnvMan.instance.m_biomes)
+            {
+                if (biomesDefault.TryGetValue(biome.m_biome, out string biomeJSON))
+                {
+                    BiomeEnvSetup biomeEnvironment = JsonUtility.FromJson<BiomeEnvSetup>(biomeJSON);
+                    biomeEnvironment.m_environments.AddRange(biome.m_environments);
+                    biomesDefault[biome.m_biome] = JsonUtility.ToJson(biomeEnvironment);
+                }
+                else
+                {
+                    biomesDefault[biome.m_biome] = JsonUtility.ToJson(biome);
+                }
+            }
+        }
+
         private void UpdateBiomesSetup()
         {
             SeasonBiomeEnvironments.SeasonBiomeEnvironment biomeEnv = seasonBiomeEnvironments.GetSeasonBiomeEnvironment(seasonState.GetCurrentSeason());
 
-            if (biomesDefault.Count == 0)
-                biomesDefault.AddRange(EnvMan.instance.m_biomes.Select(biome => JsonUtility.ToJson(biome)));
+            RefreshBiomesDefault(forceUpdate:false);
 
             EnvMan.instance.m_biomes.Clear();
 
-            foreach (string biomeEnvironmentDefault in biomesDefault)
+            biomesDefault.Do(kvp => ChangeBiomeEnvironment(kvp.Value));
+
+            UpdateCurrentEnvironment();
+
+            void ChangeBiomeEnvironment(string biomeEnvironmentDefault)
             {
                 try
                 {
@@ -303,8 +331,6 @@ namespace Seasons
                     LogWarning($"Error appending biome setup:\n{biomeEnvironmentDefault}\n{e}");
                 }
             }
-
-            UpdateCurrentEnvironment();
         }
 
         public static void UpdateSeasonSettings()
