@@ -185,6 +185,7 @@ namespace Seasons
                 s_iceFloe.m_prefab.AddComponent<IceFloeClimb>();
 
             s_iceFloe.m_prefab.GetComponent<ZNetView>().m_syncInitialScale = true;
+            s_iceFloe.m_prefab.GetComponent<Destructible>().m_health = iceFloesHealth.Value;
         }
 
         public bool BiomeChanged(Biome biome)
@@ -443,6 +444,8 @@ namespace Seasons
             UpdateWaterSurface(s_waterPlane, s_waterPlaneState);
 
             Instance?.StartCoroutine(UpdateWaterObjects());
+
+            s_iceFloe.m_prefab.GetComponent<Destructible>().m_health = iceFloesHealth.Value;
         }
 
         public static void UpdateWater(WaterVolume waterVolume, WaterState waterState, bool revertState = false)

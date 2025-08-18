@@ -87,6 +87,7 @@ namespace Seasons
         public static ConfigEntry<bool> enableIceFloes;
         public static ConfigEntry<Vector2> iceFloesInWinterDays;
         public static ConfigEntry<Vector2> amountOfIceFloesInWinterDays;
+        public static ConfigEntry<float> iceFloesHealth;
         public static ConfigEntry<bool> enableNightMusicOnFrozenOcean;
         public static ConfigEntry<float> frozenOceanSlipperiness;
         public static ConfigEntry<bool> placeShipAboveFrozenOcean;
@@ -400,6 +401,7 @@ namespace Seasons
             iceFloesInWinterDays = config("Season - Winter ocean", "Fill the water with ice floes at given days from to", defaultValue: new Vector2(4f, 10f), "Ice floes will be spawned in the first set day of winter and will be removed after second set day");
             amountOfIceFloesInWinterDays = config("Season - Winter ocean", "Amount of ice floes in one zone", defaultValue: new Vector2(10f, 20f), "Game will take random value between set numbers and will try to spawn that amount of ice floes in one zone (square 64x64)");
             iceFloesScale = config("Season - Winter ocean", "Scale of ice floes", defaultValue: new Vector2(0.75f, 2f), "Size of spawned ice floe random to XYZ axes");
+            iceFloesHealth = config("Season - Winter ocean", "Health of ice floes", defaultValue: 20f, "Healt of the spawned ice floes");
             enableNightMusicOnFrozenOcean = config("Season - Winter ocean", "Enable music while travelling frozen ocean at night", defaultValue: true, "Enables special frozen ocean music");
             frozenOceanSlipperiness = config("Season - Winter ocean", "Frozen ocean surface slipperiness factor", defaultValue: 1f, "Slipperiness factor of the frozen ocean surface");
             placeShipAboveFrozenOcean = config("Season - Winter ocean", "Place ship above frozen ocean surface", defaultValue: false, "Place ship above frozen ocean surface to move them without destroying");
@@ -410,6 +412,7 @@ namespace Seasons
             waterFreezesInWinterDays.SettingChanged += (sender, args) => ZoneSystemVariantController.UpdateWaterState();
             iceFloesInWinterDays.SettingChanged += (sender, args) => ZoneSystemVariantController.UpdateWaterState();
             amountOfIceFloesInWinterDays.SettingChanged += (sender, args) => ZoneSystemVariantController.UpdateWaterState();
+            iceFloesHealth.SettingChanged += (sender, args) => ZoneSystemVariantController.UpdateWaterState();
             placeShipAboveFrozenOcean.SettingChanged += (sender, args) => ZoneSystemVariantController.UpdateShipsPositions();
             placeFloatingContainersAboveFrozenOcean.SettingChanged += (sender, args) => ZoneSystemVariantController.UpdateFloatingPositions();
 
@@ -743,7 +746,7 @@ namespace Seasons
 
         public static IEnumerator PickableSetPicked(Pickable pickable)
         {
-            yield return waitForFixedUpdate;
+            yield return new WaitForSeconds(5f);
 
             pickable.m_nview?.GetZDO().Set("PickedByWinter".GetStableHashCode(), true);
             pickable.m_nview?.InvokeRPC(ZNetView.Everybody, "RPC_SetPicked", true);
@@ -751,7 +754,7 @@ namespace Seasons
 
         public static IEnumerator CheckFishCoR(Fish fish)
         {
-            yield return waitForFixedUpdate;
+            yield return new WaitForSeconds(5f);
 
             ZoneSystemVariantController.CheckIfFishAboveSurface(fish);
         }
