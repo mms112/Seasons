@@ -623,7 +623,7 @@ namespace Seasons
             if (fish.m_nview.HasOwner() && !fish.m_nview.IsOwner())
                 return;
 
-            float maximumLevel = WaterLevel - _winterWaterSurfaceOffset - fish.m_height - 0.5f;
+            float maximumLevel = WaterLevel - _winterWaterSurfaceOffset - fish.m_height - 2.0f;
             if (fish.transform.position.y > maximumLevel)
             {
                 fish.transform.position = new Vector3(fish.transform.position.x, maximumLevel, fish.transform.position.z);
@@ -1602,7 +1602,7 @@ namespace Seasons
         {
             if (Player.m_localPlayer.IsOnIce())
             {
-                __instance.StartCoroutine(CheckFishCoR(__instance));
+                CheckIfFishAboveSurface(__instance);
                 __result = false;
                 return false;
             }
