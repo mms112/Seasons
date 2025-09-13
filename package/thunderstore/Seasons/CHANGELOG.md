@@ -1,3 +1,11 @@
+# 1.6.8
+* night length will be changed gradually between seasons
+
+# 1.6.7
+* Call To Arms patch
+* fixed potential weather desync bringed in version 1.6.5
+* better ice floes behaviour in a distance and on large waves
+
 # 1.6.6
 * fixed an ice floes being left after winter is ended
 * ice floes will no longer spawns again during one season (you can clear the water and it will stay for a whole winter)

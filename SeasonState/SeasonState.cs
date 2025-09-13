@@ -32,6 +32,7 @@ namespace Seasons
         public static SeasonClutterSettings seasonClutterSettings = new SeasonClutterSettings(loadDefaults: true);
         public static SeasonBiomeSettings seasonBiomeSettings = new SeasonBiomeSettings(loadDefaults: true);
 
+        private static readonly Dictionary<Heightmap.Biome, string> biomesDefault = new Dictionary<Heightmap.Biome, string>();
         private static readonly List<ItemDrop.ItemData> _itemDataList = new List<ItemDrop.ItemData>();
         private static int _pendingSeasonChange = 0;
 
@@ -51,7 +52,7 @@ namespace Seasons
             if (!initialize)
                 return;
 
-            biomesDefault.Clear();
+            ClearBiomesDefault();
 
             foreach (Season season in Enum.GetValues(typeof(Season)))
                 if (!seasonsSettings.ContainsKey(season))
@@ -265,18 +266,58 @@ namespace Seasons
 
         public int GetNightLength()
         {
-            return GetNightLength(GetSeason(GetCurrentWorldDay()));
+            int day = GetCurrentWorldDay();
+            return GetNightLength(GetSeason(day), GetDayInSeason(day));
         }
 
-        public int GetNightLength(Season season)
+        public int GetNightLength(Season season, int dayInSeason)
         {
-            return GetSeasonSettings(season).m_nightLength;
+            int currentNightLength = GetSeasonSettings(season).m_nightLength;
+            if (!changeNightLengthGradually.Value)
+                return currentNightLength;
+
+            int daysInSeason = GetDaysInSeason(season);
+            
+            float currentPeakDay = daysInSeason / 2f;
+            int lastPeakDay = Mathf.CeilToInt(currentPeakDay);
+            int firstPeakDay = Mathf.FloorToInt(currentPeakDay);
+
+            if (dayInSeason == firstPeakDay || dayInSeason == lastPeakDay)
+                return currentNightLength;
+            else if (dayInSeason < firstPeakDay)
+            {
+                Season previous = GetPreviousSeason(season);
+                int daysInPreviousSeason = GetDaysInSeason(season);
+
+                lastPeakDay = Mathf.CeilToInt(daysInPreviousSeason / 2f);
+                int daysInPrevious = daysInPreviousSeason - lastPeakDay;
+
+                int previousNightLength = GetSeasonSettings(previous).m_nightLength;
+
+                return Mathf.RoundToInt(Mathf.Lerp(previousNightLength, currentNightLength, (float)(dayInSeason + daysInPrevious) / (firstPeakDay + daysInPrevious)));
+            }
+            else if (dayInSeason > lastPeakDay)
+            {
+                Season next = GetNextSeason(season);
+                int daysInNextSeason = GetDaysInSeason(next);
+                
+                firstPeakDay = Mathf.FloorToInt(daysInNextSeason / 2f);
+                int daysLeft = daysInSeason - lastPeakDay;
+
+                int nextNightLength = GetSeasonSettings(next).m_nightLength;
+
+                return Mathf.RoundToInt(Mathf.Lerp(currentNightLength, nextNightLength, (float)(dayInSeason - lastPeakDay) / (firstPeakDay + daysLeft)));
+            }
+
+            return currentNightLength;
         }
+
+        public static void ClearBiomesDefault() => biomesDefault.Clear();
 
         public static void RefreshBiomesDefault(bool forceUpdate)
         {
             if (forceUpdate)
-                biomesDefault.Clear();
+                ClearBiomesDefault();
 
             if (!EnvMan.instance)
                 return;
@@ -285,9 +326,13 @@ namespace Seasons
             {
                 if (biomesDefault.TryGetValue(biome.m_biome, out string biomeJSON))
                 {
-                    BiomeEnvSetup biomeEnvironment = JsonUtility.FromJson<BiomeEnvSetup>(biomeJSON);
-                    biomeEnvironment.m_environments.AddRange(biome.m_environments);
-                    biomesDefault[biome.m_biome] = JsonUtility.ToJson(biomeEnvironment);
+                    if (forceUpdate)
+                    {
+                        // Combine several entries just in case
+                        BiomeEnvSetup biomeEnvironment = JsonUtility.FromJson<BiomeEnvSetup>(biomeJSON);
+                        biomeEnvironment.m_environments.AddRange(biome.m_environments);
+                        biomesDefault[biome.m_biome] = JsonUtility.ToJson(biomeEnvironment);
+                    }
                 }
                 else
                 {
@@ -712,12 +757,13 @@ namespace Seasons
 
         public float DayStartFraction()
         {
-            return DayStartFraction(GetSeason(GetCurrentWorldDay()));
+            int day = GetCurrentWorldDay();
+            return DayStartFraction(GetSeason(day), GetDayInSeason(day));
         }
 
-        public float DayStartFraction(Season season)
+        public float DayStartFraction(Season season, int dayInSeason)
         {
-            return (seasonState.GetNightLength(season) / 2f) / 100f;
+            return (seasonState.GetNightLength(season, dayInSeason) / 2f) / 100f;
         }
 
         public bool GetTorchAsFiresource()
@@ -1270,7 +1316,7 @@ namespace Seasons
         public static bool IsFrostResistant(HitData.DamageModPair damageMod)
         {
             return damageMod.m_type == HitData.DamageType.Frost &&
-                   (damageMod.m_modifier == HitData.DamageModifier.Resistant || damageMod.m_modifier == HitData.DamageModifier.VeryResistant || damageMod.m_modifier == HitData.DamageModifier.Immune);
+                   (damageMod.m_modifier == HitData.DamageModifier.SlightlyResistant || damageMod.m_modifier == HitData.DamageModifier.Resistant || damageMod.m_modifier == HitData.DamageModifier.VeryResistant || damageMod.m_modifier == HitData.DamageModifier.Immune);
         }
 
         private void SetCurrentSeasonDay(Season season, int day)
