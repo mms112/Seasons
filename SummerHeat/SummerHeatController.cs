@@ -31,8 +31,8 @@ namespace Seasons
         internal const float DaytimeHeatCap = 100f;
         internal const float ShadowRayDistance = 100f;
         internal const float StableEpsilon = 0.01f;
-        internal const float WetCoolingPerSecond = 5f;
-        internal const float ShelterCoolingPerSecond = 2f;
+        internal const float WetCoolingPerSecond = 2f;
+        internal const float ShelterCoolingPerSecond = 1f;
         internal const float BurningHeatPerSecond = 5f;
         internal const float RunningHeatPerSecond = 0.5f;
         internal const float WalkingCoolingPerSecond = 0.5f;
@@ -280,7 +280,7 @@ namespace Seasons
             _hasCoolingFood = false;
             _hasCampFireStatus = false;
             _biomeAllowsSummerHeat = false;
-            _state.SetHeat(0f, 0f, 0f, DaytimeHeatCap, HeatZone.Neutral, 0f, 0f, 0f);
+            _state.SetHeat(Player, 0f, 0f, 0f, DaytimeHeatCap, HeatZone.Neutral, 0f, 0f, 0f);
             _state.Direction = previousTotal > 0f ? -1 : 0;
             _state.IsCooling = false;
             _state.IsSunny = false;
@@ -309,7 +309,7 @@ namespace Seasons
             if (!_biomeAllowsSummerHeat)
             {
                 _overflowHeat = 0f;
-                _state.SetHeat(0f, 0f, 0f, DaytimeHeatCap, HeatZone.Neutral, 0f, 0f, 0f);
+                _state.SetHeat(Player, 0f, 0f, 0f, DaytimeHeatCap, HeatZone.Neutral, 0f, 0f, 0f);
                 _state.Direction = previousTotal > 0f ? -1 : 0;
                 _state.IsCooling = previousTotal > 0f;
                 _state.MechanicActive = false;
@@ -327,10 +327,10 @@ namespace Seasons
                     environmentalDelta += heatPerSecond * dt;
                     break;
                 case SummerHeatMode.CoolingFast:
-                    environmentalDelta -= heatPerSecond * 2.5f * dt;
+                    environmentalDelta -= heatPerSecond * 1.25f * dt;
                     break;
                 case SummerHeatMode.CoolingNormal:
-                    environmentalDelta -= heatPerSecond * 1.25f * dt;
+                    environmentalDelta -= heatPerSecond * 0.8f * dt;
                     break;
                 case SummerHeatMode.CoolingSlow:
                     environmentalDelta -= heatPerSecond * 0.4f * dt;
@@ -387,7 +387,7 @@ namespace Seasons
             float redFactor = CalculateRedFactor(heat);
             float maxFactor = CalculateMaxFactor(heat, totalHeat, heatCap);
 
-            _state.SetHeat(heat, _overflowHeat, totalHeat, DaytimeHeatCap, zone, greenFactor, redFactor, maxFactor);
+            _state.SetHeat(Player, heat, _overflowHeat, totalHeat, DaytimeHeatCap, zone, greenFactor, redFactor, maxFactor);
             float delta = totalHeat - previousTotalHeat;
             _state.Direction = Mathf.Abs(delta) <= StableEpsilon ? 0 : delta > 0f ? 1 : -1;
             _state.IsCooling = _hasColdStatus
@@ -593,6 +593,8 @@ namespace Seasons
             if (player.IsRunning())
                 return RunningHeatPerSecond * dt;
 
+            return 0f;
+#if false
             if (player.IsWalking())
                 return 0f - WalkingCoolingPerSecond * dt;
 
@@ -600,6 +602,7 @@ namespace Seasons
                 return 0f;
 
             return 0f - StandingCoolingPerSecond * dt;
+#endif
         }
 
         private void ApplyHeatDelta(float delta, float heatCap)
@@ -779,13 +782,15 @@ namespace Seasons
             }
         }
 
-        private static SummerHeatMode GetMode(bool seasonHeatWindowActive, bool isHeating, bool isCoolingByWater, bool isInShade)
+        private SummerHeatMode GetMode(bool seasonHeatWindowActive, bool isHeating, bool isCoolingByWater, bool isInShade)
         {
+            int iNumWarmClothes = SeasonState.GetWarmClothesCount(Player);
+
             if (isCoolingByWater)
                 return SummerHeatMode.CoolingFast;
-            if (isHeating)
+            if (isHeating || (seasonHeatWindowActive && iNumWarmClothes > 1))
                 return SummerHeatMode.Heating;
-            if (seasonHeatWindowActive && isInShade)
+            if (seasonHeatWindowActive && isInShade && iNumWarmClothes < 1)
                 return SummerHeatMode.CoolingNormal;
             return SummerHeatMode.CoolingSlow;
         }

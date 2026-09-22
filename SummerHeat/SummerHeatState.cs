@@ -38,7 +38,7 @@ namespace Seasons
         public HeatZone Zone;
         public int Direction;
 
-        public void SetHeat(float heatPercent, float overflowHeatPercent, float totalHeatPercent, float displayCap, HeatZone zone, float greenFactor, float redFactor, float maxFactor)
+        public void SetHeat(Player player, float heatPercent, float overflowHeatPercent, float totalHeatPercent, float displayCap, HeatZone zone, float greenFactor, float redFactor, float maxFactor)
         {
             HeatPercent = Mathf.Clamp(heatPercent, 0f, 100f);
             OverflowHeatPercent = Mathf.Max(0f, overflowHeatPercent);
@@ -48,6 +48,7 @@ namespace Seasons
             RedFactor = Mathf.Clamp01(redFactor);
             MaxFactor = Mathf.Clamp01(maxFactor);
             Zone = zone;
+            Seasons.seasonState.CheckOverheatStatus(player);
         }
     }
 
