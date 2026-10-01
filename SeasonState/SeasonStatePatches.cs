@@ -561,10 +561,13 @@ namespace Seasons
         {
             private static void Prefix(CookingStation __instance, ref float dt)
             {
+                if (seasonState.GetCurrentSeason() == Season.Spring)
+                    return;
+
                 if (IsProtectedPosition(__instance.transform.position))
                     return;
 
-                dt *= Math.Max(0f, seasonState.GetFireplaceDrainMultiplier());
+                dt *= Math.Max(0.8f, Math.Min(1.5f, seasonState.GetFireplaceDrainMultiplier()));
             }
         }
 

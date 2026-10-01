@@ -20,7 +20,7 @@ namespace LocalizationManager;
 #nullable enable
 
 [PublicAPI]
-public class Localizer
+internal class Localizer
 {
     private const string defaultLanguage = "English";
 
