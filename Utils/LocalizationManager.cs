@@ -4,10 +4,9 @@ using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
 using JetBrains.Annotations;
-using Newtonsoft.Json;
 using Splatform;
+using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -104,16 +103,44 @@ internal class Localizer
             localizationObjects.Remove(reference);
     }
 
-    public static IEnumerator Load()
+    private static bool initialized;
+    private static bool localizationEnabled;
+
+    public static void Initialize()
     {
-        yield return new WaitUntil(() => PlatformManager.DistributionPlatform != null && PlatformInitializer.PreferencesInitialized);
+        if (initialized)
+            return;
 
-        // Prevent NRE if language has not been set explicitly yet
-        // It will fall into English anyway
-        if (string.IsNullOrEmpty(PlatformPrefs.GetString("language", "")))
-            PlatformPrefs.SetString("language", defaultLanguage);
+        initialized = true;
+        if (SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null)
+            return;
 
-        LoadLocalization(Localization.instance, Localization.instance.GetSelectedLanguage());
+        Harmony harmony = new("org.bepinex.helpers.LocalizationManager");
+        harmony.Patch(
+            AccessTools.DeclaredMethod(typeof(Localization), nameof(Localization.SetupLanguage)),
+            postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(Localizer), nameof(LoadLocalization))));
+        harmony.Patch(
+            AccessTools.DeclaredMethod(typeof(FejdStartup), nameof(FejdStartup.SetupGui)),
+            postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(Localizer), nameof(ApplyCurrentLocalization))));
+        localizationEnabled = true;
+    }
+
+    public static void ApplyCurrentLocalization()
+    {
+        if (!localizationEnabled || Localization.m_instance == null)
+            return;
+
+        string language = defaultLanguage;
+        if (PlatformManager.DistributionPlatform != null && PlatformInitializer.PreferencesInitialized)
+        {
+            string selectedLanguage = Localization.m_instance.GetSelectedLanguage();
+            if (string.IsNullOrEmpty(selectedLanguage))
+                PlatformPrefs.SetString("language", defaultLanguage);
+            else
+                language = selectedLanguage;
+        }
+
+        LoadLocalization(Localization.m_instance, language);
     }
 
     private static void LoadLocalization(Localization __instance, string language)
@@ -186,13 +213,12 @@ internal class Localizer
         loadedTexts[language] = localizationTexts;
         foreach (KeyValuePair<string, string> s in localizationTexts)
             UpdatePlaceholderText(__instance, s.Key);
+
+        // AddWord replaces translations but does not invalidate Valheim's localized-string cache.
+        // Other mods can request our tokens before this plugin has finished loading them.
+        __instance.m_cache.EvictAll();
     }
 
-    static Localizer()
-    {
-        Harmony harmony = new("org.bepinex.helpers.LocalizationManager");
-        harmony.Patch(AccessTools.DeclaredMethod(typeof(Localization), nameof(Localization.LoadCSV)), postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(Localizer), nameof(LoadLocalization))));
-    }
 
     private static byte[]? LoadTranslationFromAssembly(string language)
     {

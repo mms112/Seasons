@@ -13,6 +13,7 @@ namespace Seasons
     {
         private Season m_season = Season.Spring;
         private bool m_indoors = false;
+        private Heightmap.Biome m_biome = Heightmap.Biome.None;
 
         [Header("Skills modifiers")]
         public Dictionary<Skills.SkillType, float> m_customRaiseSkills = new Dictionary<Skills.SkillType, float>();
@@ -26,7 +27,8 @@ namespace Seasons
         {
             if (m_season != seasonState.GetCurrentSeason())
                 Setup(m_character);
-            else if (m_character != null && m_character == Player.m_localPlayer && m_character.InInterior() != m_indoors)
+            else if (m_character != null && m_character == Player.m_localPlayer &&
+                (m_character.InInterior() != m_indoors || Player.m_localPlayer.GetCurrentBiome() != m_biome))
                 Setup(m_character);
             else
                 base.UpdateStatusEffect(dt);
@@ -37,6 +39,7 @@ namespace Seasons
             StatusEffectHud.EnsureTimeTextRichText();
             
             m_season = seasonState.GetCurrentSeason();
+            m_biome = character is Player player && player ? player.GetCurrentBiome() : Heightmap.Biome.None;
             if (m_indoors != (m_indoors = character != null && character == Player.m_localPlayer && character.InInterior()))
                 seasonState.OnInteriorChanged(m_indoors);
 
@@ -57,7 +60,7 @@ namespace Seasons
                 _sb.AppendFormat("{0} / {1}\n", $"$hud_mapday {seasonState.GetCurrentDay()}".Localize(), seasonState.GetDaysInSeason());
 
             if (seasonsTimerFormatInRaven.Value == TimerFormat.TimeToEnd || seasonsTimerFormatInRaven.Value == TimerFormat.CurrentDayAndTimeToEnd)
-                _sb.AppendFormat("{0}: {1}\n", MessageNextSeason(), TimerString(seasonState.GetTimeToCurrentSeasonEnd()));
+                _sb.AppendFormat("{0}: {1}\n", MessageNextSeasonToken(), TimerString(seasonState.GetTimeToCurrentSeasonEnd()));
 
             string statsTooltip = base.GetTooltipString();
             if (statsTooltip.Length > 0)
@@ -134,7 +137,11 @@ namespace Seasons
             m_name = GetSeasonName(m_season);
             m_icon = GetSeasonIcon(m_season);
 
-            Stats statsToSet = !controlStats.Value || seasonalStatsOutdoorsOnly.Value && m_indoors ? emptyStats : SeasonState.seasonStats.GetSeasonStats();
+            // These biomes have no seasonal stat effects, regardless of the indoor setting.
+            Stats statsToSet = !controlStats.Value || m_biome == Heightmap.Biome.AshLands ||
+                m_biome == Heightmap.Biome.DeepNorth || (seasonalStatsOutdoorsOnly.Value && m_indoors)
+                ? emptyStats
+                : SeasonState.seasonStats.GetSeasonStats();
             statsToSet.SetStatusEffectStats(this);
         }
 
@@ -143,7 +150,8 @@ namespace Seasons
             (Player.m_localPlayer?.GetSEMan().GetStatusEffect(SeasonsVars.s_statusEffectSeasonHash) as SE_Season)?.Setup(Player.m_localPlayer);
         }
 
-        private static string MessageNextSeason() => GetSeasonIsComing(seasonState.GetNextSeason()).Localize();
+        private static string MessageNextSeasonToken() => GetSeasonIsComing(seasonState.GetNextSeason());
+        private static string MessageNextSeason() => MessageNextSeasonToken().Localize();
     
         private static string TimerString(double seconds, bool icon = false)
         {

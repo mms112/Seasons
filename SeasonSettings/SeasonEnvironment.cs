@@ -631,7 +631,10 @@ namespace Seasons
                     m_alwaysDark = false,
                     m_psystems = "Snow,Darklands,GroundMist",
                     m_ambientLoop = "Amb_DeepNorth_Loop_01",
-                    m_snowBuildup = 0.2f
+                    m_snowBuildup = 0.2f,
+                    m_lightIntensityDay = 2f,
+                    m_ambColorDay = "#98B1CBFF",
+                    m_fogColorDay = "#3D555CFF",
                },
                 new SeasonEnvironment
                 {
@@ -671,13 +674,16 @@ namespace Seasons
                     m_name = "Snow Winter",
                     m_cloneFrom = "Snow",
                     m_snowBuildup = 0.2f,
+                    m_isFreezing = true,
                 },
                 new SeasonEnvironment
                 {
                     m_name = "SnowStorm Winter",
                     m_cloneFrom = "SnowStorm",
                     m_snowBuildup = 0.4f,
-                }
+                    m_isFreezing = true,
+                    m_isColdAtNight = true,
+               }
             };
         }
 

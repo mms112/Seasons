@@ -2,7 +2,7 @@
   <Import Project="$(SolutionDir)\valheim.targets" />
   <PropertyGroup>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>12.0</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <NoWarn>1701;1702;CS1685</NoWarn>
   </PropertyGroup>
