@@ -7,6 +7,7 @@
     <NoWarn>1701;1702;CS1685</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Assets\clear_snow.png" />
     <EmbeddedResource Include="Assets\season_fall.png" />
     <EmbeddedResource Include="Assets\season_spring.png" />
     <EmbeddedResource Include="Assets\season_summer.png" />
