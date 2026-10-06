@@ -473,6 +473,9 @@ namespace Seasons
                 if (!overrideNewDayMessagesOnSeasonStartEnd.Value)
                     return;
 
+                if (seasonState.GetCurrentWorldDay() == 1)
+                    return;
+
                 Player player = Player.m_localPlayer;
                 if (player == null)
                     return;
